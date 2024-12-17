@@ -147,6 +147,7 @@ if __name__ == "__main__":
 ![image](https://github.com/user-attachments/assets/5ec84750-cbdf-4f61-9926-c9033551c98e)
 ### Lưu t vào db, tạo 1 html hiển thị dữ liệu
 ![image](https://github.com/user-attachments/assets/52684a30-4d28-4ded-8eb3-3a360705224e)
+![image](https://github.com/user-attachments/assets/5263b92c-49e9-4777-987d-769108702c6c)
 
 
 
