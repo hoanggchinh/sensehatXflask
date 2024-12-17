@@ -2,7 +2,8 @@
 ### K215480106007 
 # Bài 1
 ### Hiển thị độ ẩm và nhiệt độ, áp suất, vị trí joystick trên web dùng flask
-![image](https://github.com/user-attachments/assets/bf056f64-6a46-4cdd-af2d-0438e1d2cd2a)
+![image](https://github.com/user-attachments/assets/cd5ff7ea-2d4a-4b98-bcaf-d4277338e94f)
+
 
 ```python
 from flask import Flask, render_template_string
