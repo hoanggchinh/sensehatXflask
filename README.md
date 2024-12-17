@@ -203,7 +203,7 @@ def save_to_sqlite(t):
     conn.commit()
     conn.close()
 
-# Hàm tính trung bình TB(A,n)
+# Hàm tính trung bình TB(A, n)
 def calculate_average(A):
     if len(A) == 0:
         return 0
@@ -217,45 +217,40 @@ pressure = 0.0
 joystick_pos = (4, 4)  # Toạ độ joystick
 average_temperature = 0.0
 A = []  # Mảng lưu lịch sử nhiệt độ
+tUpdate = 0.0  # Biến tUpdate
 
 # Hàm đọc dữ liệu từ SenseHat và xử lý
 def update_data():
-    global temperature, humidity, pressure, joystick_pos, average_temperature, A
+    global temperature, humidity, pressure, joystick_pos, average_temperature, A, tUpdate
     while True:
         # Đọc nhiệt độ, độ ẩm, áp suất từ SenseHat
         temperature = round(sense.get_temperature(), 1)
         humidity = round(sense.get_humidity(), 1)
         pressure = round(sense.get_pressure(), 1)
 
-        # Đọc trạng thái joystick
-        for event in sense.stick.get_events():
-            if event.action == 'pressed':
-                if event.direction == 'up':
-                    joystick_pos = (joystick_pos[0], max(0, joystick_pos[1] - 1))
-                elif event.direction == 'down':
-                    joystick_pos = (joystick_pos[0], min(7, joystick_pos[1] + 1))
-                elif event.direction == 'left':
-                    joystick_pos = (max(0, joystick_pos[0] - 1), joystick_pos[1])
-                elif event.direction == 'right':
-                    joystick_pos = (min(7, joystick_pos[0] + 1), joystick_pos[1])
+        # Tính tUpdate theo công thức: tUpdate = (t + TB(A, n)) / 2
+        n = len(A)
+        tUpdate = round((temperature + calculate_average(A)) / 2, 1)
 
-        # Lưu nhiệt độ vào SQLite
-        save_to_sqlite(temperature)
+        # Chỉ gửi dữ liệu lên Firebase khi tUpdate != t
+        if tUpdate != temperature:
+            # Lưu nhiệt độ vào SQLite
+            save_to_sqlite(temperature)
 
-        # Cập nhật mảng A và tính TB(A, n)
-        if len(A) >= 5:  # Giới hạn mảng A tối đa 5 phần tử
-            A.pop(0)
-        A.append(temperature)
-        average_temperature = calculate_average(A)
+            # Cập nhật mảng A và tính TB(A, n)
+            if len(A) >= 5:  # Giới hạn mảng A tối đa 5 phần tử
+                A.pop(0)
+            A.append(tUpdate)
+            average_temperature = calculate_average(A)
 
-        # Gửi TB(A, n) lên Firebase
-        sensor_data = {
-            "average_temperature": average_temperature,
-            "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
-        }
-        database.child("OptimizedSensorData").set(sensor_data)
+            # Gửi tUpdate lên Firebase
+            sensor_data = {
+                "average_temperature": average_temperature,
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+            }
+            database.child("OptimizedSensorData").set(sensor_data)
+            print(f"Nhiệt độ hiện tại: {temperature} °C | Trung bình TB(A, n): {average_temperature} °C | tUpdate: {tUpdate}")
 
-        print(f"Nhiệt độ hiện tại: {temperature} °C | Trung bình TB(A, n): {average_temperature} °C")
         time.sleep(2)  # Cập nhật mỗi 2 giây
 
 # -------------------------------------------
@@ -296,12 +291,6 @@ def index():
                                   joystick_pos=joystick_pos)
 
 # -------------------------------------------
-
-
-
-
-
-# -------------------------------------------
 # Route để hiển thị dữ liệu từ SQLite
 @app.route("/view_data")
 def view_data():
@@ -318,12 +307,6 @@ def view_data():
     html_data += "</table>"
     
     return html_data
-
-
-
-
-
-
 
 # Chạy các luồng
 if __name__ == "__main__":
